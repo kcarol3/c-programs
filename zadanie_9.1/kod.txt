@@ -1,0 +1,31 @@
+#include <avr/io.h> // dołączenie biblioteki wejścia-wyjścia
+#include <avr/interrupt.h> // dołączenie biblioteki odpowiedzialnej za przerwania
+
+ISR(INT0_vect) { // obsługa przerwania wywołanego zmianą stanu wejścia
+	PORTA ^= 1 << PA0; // selektywne negowanie bitu 0 portu A 
+}
+ISR(INT2_vect) { // obsługa przerwania wywołanego zmianą stanu wejścia
+	PORTA ^= 1 << PA2; // selektywne negowanie drugiego bitu portu A
+}
+
+int main(void) {
+	uint8_t tmp; // deklaracje zmiennej, do której będzie przypisana wartość rejestru MCUCR
+	DDRA = 1 << PA0 | 1 << PA2; // ustawienie 0 i 2 bitu portu A na wyjście
+	tmp = MCUCR; // przypisanie do zmiennej tmp wartości rejestru MCUCR
+	tmp &= ~(1 << ISC00); 
+	tmp |= 1 << ISC01; // wysterowanie INT0 aby zgłaszał przerwanie przy zboczu opadającym
+	MCUCR = tmp; // zapisanie w rejestrze MCUCR wcześniej przygotowanych ustawień
+	MCUCSR &= ~(1<<INT2); // wysterowanie INT0 aby zgłaszał przerwanie przy zboczu opadającym
+	
+	GICR |= 1 << INT0 | 1 << INT2; // włączenie przerwań INT0 i INT2
+	GIFR |= 1 << INT0 | 1 << INT2;
+	sei(); // włączenie obsługi globalnej obsługi przerwań
+	DDRB &= ~(1<<2); // ustawienie 2 bitu portu B na wejście
+	DDRD &= ~(1<<2); // ustawienie 2 bitu portu D na wejście
+	PORTB |= (1<<2); // podciągnięcie stanu wysokiego na 2 bit portu B
+	PORTD |= (1<<2); // podciągnięcie stanu wysokiego na 2 bit portu B
+	
+	while (1)
+	{
+	}
+}
